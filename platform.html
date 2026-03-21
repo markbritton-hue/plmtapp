@@ -128,6 +128,14 @@
       <p class="mb-3" style="color:var(--muted);">Mark attempts and enter 2nd/3rd attempt weights.</p>
 
       <div id="platformTabs" class="platform-tabs"></div>
+
+      <!-- Current event selector -->
+      <div class="platform-tabs mb-3" id="eventTabs">
+        <button class="platform-tab active" data-event="squat">Squat</button>
+        <button class="platform-tab" data-event="bench">Bench</button>
+        <button class="platform-tab" data-event="dead">Deadlift</button>
+      </div>
+
       <div id="athleteList"></div>
     </div>
   </div>
@@ -147,6 +155,8 @@
     }
 
     let currentPlatform = 1;
+    let currentEvent = "squat";
+    let lastSnap = null;
     let unsubscribe = null;
 
     async function init() {
@@ -161,6 +171,16 @@
       const numPlatforms = meet.platforms || 1;
       renderTabs(numPlatforms);
       selectPlatform(1);
+
+      // Event tabs
+      document.getElementById("eventTabs").addEventListener("click", e => {
+        const btn = e.target.closest("[data-event]");
+        if (!btn) return;
+        currentEvent = btn.dataset.event;
+        document.querySelectorAll("#eventTabs .platform-tab").forEach(b =>
+          b.classList.toggle("active", b === btn));
+        if (lastSnap) renderAthletes(lastSnap);
+      });
     }
 
     function renderTabs(n) {
@@ -186,7 +206,7 @@
         where("platform", "==", p),
         orderBy("liftOrder")
       );
-      unsubscribe = onSnapshot(q, snap => renderAthletes(snap));
+      unsubscribe = onSnapshot(q, snap => { lastSnap = snap; renderAthletes(snap); });
     }
 
     function renderAthletes(snap) {
@@ -267,24 +287,28 @@
       const prevDone = num === 1 || (a[prevResultKey] === "g" || a[prevResultKey] === "x");
 
       let weightSection;
-      if (num === 1 || !prevDone) {
-        // Fixed display
-        weightSection = `<span>${weightDisplay}</span>`;
-      } else {
-        // Editable weight
+      if (event === currentEvent && num > 1 && prevDone) {
+        // Editable weight input for active event's 2nd/3rd attempts
         weightSection = `
           <input class="weight-input" type="number" step="5" min="0"
             value="${weight > 0 ? weight : ""}"
             placeholder="wt"
             data-aid="${athleteId}" data-field="${weightKey}" />`;
+      } else {
+        weightSection = `<span>${weightDisplay}</span>`;
       }
 
-      const controls = (weight > 0 && result !== "g" && result !== "x") ? `
-        <div class="attempt-controls">
-          <button class="btn-good" data-aid="${athleteId}" data-field="${resultKey}" data-val="g" title="Good lift">✓</button>
-          <button class="btn-fail" data-aid="${athleteId}" data-field="${resultKey}" data-val="x" title="No lift">✗</button>
-        </div>` : (result === "g" || result === "x") ? `
-        <button class="btn-clear" data-aid="${athleteId}" data-field="${resultKey}" data-val="" title="Clear result">↩</button>` : "";
+      const isActiveEvent = event === currentEvent;
+      const controls = isActiveEvent
+        ? (weight > 0 && result !== "g" && result !== "x") ? `
+          <div class="attempt-controls">
+            <button class="btn-good" data-aid="${athleteId}" data-field="${resultKey}" data-val="g" title="Good lift">✓</button>
+            <button class="btn-fail" data-aid="${athleteId}" data-field="${resultKey}" data-val="x" title="No lift">✗</button>
+          </div>`
+        : (result === "g" || result === "x") ? `
+          <button class="btn-clear" data-aid="${athleteId}" data-field="${resultKey}" data-val="" title="Clear result">↩</button>`
+        : ""
+        : "";
 
       return `
         <div style="display:flex;align-items:center;gap:.35rem;">
