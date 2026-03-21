@@ -85,6 +85,18 @@
     }
     .weight-save-btn:hover { background: var(--blue-dark); }
 
+    /* Position badges */
+    .position-badge {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      padding: .2em .55em; border-radius: 999px; flex-shrink: 0;
+    }
+    .badge-lifting { background: rgba(34,197,94,.2); color: #4ade80; border: 1px solid rgba(34,197,94,.4); }
+    .badge-ondeck  { background: rgba(245,158,11,.15); color: #fbbf24; border: 1px solid rgba(245,158,11,.35); }
+
+    /* Card highlights */
+    .card-lifting { border-color: rgba(34,197,94,.4) !important; }
+    .card-ondeck  { border-color: rgba(245,158,11,.3) !important; }
+
     .total-badge {
       font-size: .75rem; padding: .25em .6em; border-radius: 999px;
       background: rgba(59,130,246,.2); color: #93c5fd; font-weight: 700;
@@ -209,29 +221,58 @@
       unsubscribe = onSnapshot(q, snap => { lastSnap = snap; renderAthletes(snap); });
     }
 
+    function getNextAttemptWeight(a, event) {
+      for (let n = 1; n <= 3; n++) {
+        const result = a[`${event}${n}Result`] ?? "";
+        if (result === "") return a[`${event}${n}`] || 0;
+      }
+      return null; // all done
+    }
+
     function renderAthletes(snap) {
       const list = document.getElementById("athleteList");
       if (snap.empty) {
         list.innerHTML = `<div style="color:var(--muted);text-align:center;padding:3rem 0;">No athletes on this platform.</div>`;
         return;
       }
+
+      // Sort by next attempt weight for current event (ascending); done athletes go last
+      const athletes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      athletes.sort((a, b) => {
+        const wa = getNextAttemptWeight(a, currentEvent);
+        const wb = getNextAttemptWeight(b, currentEvent);
+        if (wa === null && wb === null) return (a.liftOrder || 0) - (b.liftOrder || 0);
+        if (wa === null) return 1;
+        if (wb === null) return -1;
+        if (wa !== wb) return wa - wb;
+        return (a.liftOrder || 0) - (b.liftOrder || 0); // tiebreak by lift order
+      });
+
       list.innerHTML = "";
-      snap.forEach(d => {
-        list.appendChild(buildAthleteCard(d.id, d.data()));
+      athletes.forEach((a, idx) => {
+        const position = idx === 0 ? "lifting" : idx === 1 ? "ondeck" : null;
+        list.appendChild(buildAthleteCard(a.id, a, position));
       });
     }
 
-    function buildAthleteCard(id, a) {
+    function buildAthleteCard(id, a, position = null) {
       const div = document.createElement("div");
-      div.className = "athlete-card";
+      div.className = "athlete-card" + (position === "lifting" ? " card-lifting" : position === "ondeck" ? " card-ondeck" : "");
       const total = calcTotal(a);
       const desigClass = a.designation === "JV" ? "badge-jv" : "badge-varsity";
 
+      const positionBadge = position === "lifting"
+        ? `<span class="position-badge badge-lifting"><i class="fa-solid fa-circle-dot me-1"></i>Lifting</span>`
+        : position === "ondeck"
+        ? `<span class="position-badge badge-ondeck">On Deck</span>`
+        : "";
+
       div.innerHTML = `
         <div class="athlete-header">
-          <div>
+          <div class="d-flex align-items-center gap-2">
+            ${positionBadge}
             <span class="athlete-name">${esc(a.name)}</span>
-            <span class="designation-badge ${desigClass} ms-2">${esc(a.designation)}</span>
+            <span class="designation-badge ${desigClass}">${esc(a.designation)}</span>
           </div>
           <div class="d-flex align-items-center gap-2">
             <span class="athlete-meta">${esc(a.school)} · ${esc(a.weightClass)} · ${a.bodyWeight} lbs</span>
