@@ -45,6 +45,25 @@
     .alert-success { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.3); color: #86efac; }
     .alert-danger { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.3); color: #fca5a5; }
     .section-title { font-size: 1.1rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1rem; }
+
+    /* Weight class assignment */
+    #wcSection { border-top: 1px solid var(--navy3); margin-top: 1.25rem; padding-top: 1.25rem; }
+    .platform-wc-block {
+      background: var(--navy3); border-radius: 8px; padding: .75rem 1rem; margin-bottom: .75rem;
+    }
+    .platform-wc-label {
+      font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--blue); margin-bottom: .6rem;
+    }
+    .wc-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .wc-chip {
+      padding: .25rem .6rem; border-radius: 5px; font-size: .78rem; font-weight: 600;
+      border: 1px solid #475569; background: var(--navy2); color: var(--muted);
+      cursor: pointer; user-select: none; transition: all .12s;
+    }
+    .wc-chip.selected {
+      background: rgba(59,130,246,.2); border-color: var(--blue); color: #93c5fd;
+    }
   </style>
 </head>
 <body>
@@ -99,6 +118,15 @@
               <input type="text" class="form-control" id="meetLocation" placeholder="e.g. Springfield High School" />
             </div>
           </div>
+
+          <!-- Weight class per platform -->
+          <div id="wcSection" style="display:none;">
+            <div style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem;">
+              <i class="fa-solid fa-scale-balanced me-2" style="color:var(--blue);"></i>Weight Classes per Platform
+            </div>
+            <div id="wcPlatformBlocks"></div>
+          </div>
+
           <div class="mt-3 d-flex gap-2">
             <button type="submit" class="btn btn-primary" id="submitBtn">
               <i class="fa-solid fa-floppy-disk me-2"></i>Create Meet &amp; Set Active
@@ -153,6 +181,49 @@
     const cancelEditBtn = document.getElementById("cancelEditBtn");
     const formTitle = document.getElementById("formTitle");
     const formIcon = document.getElementById("formIcon");
+    const wcSection = document.getElementById("wcSection");
+    const wcPlatformBlocks = document.getElementById("wcPlatformBlocks");
+
+    const ALL_WEIGHT_CLASSES = [
+      "97","105","114","123","132","145","148","155","165","181",
+      "194","198","207","220","242","275","308","SHW"
+    ];
+
+    // Build weight class blocks when platform count changes
+    document.getElementById("meetPlatforms").addEventListener("input", () => {
+      buildWcBlocks(parseInt(document.getElementById("meetPlatforms").value) || 0);
+    });
+
+    function buildWcBlocks(n, existing = {}) {
+      wcPlatformBlocks.innerHTML = "";
+      if (n < 1) { wcSection.style.display = "none"; return; }
+      wcSection.style.display = "";
+      for (let i = 1; i <= n; i++) {
+        const assigned = existing[String(i)] || [];
+        const block = document.createElement("div");
+        block.className = "platform-wc-block";
+        block.innerHTML = `<div class="platform-wc-label">Platform ${i}</div><div class="wc-chips" id="wc-p${i}"></div>`;
+        wcPlatformBlocks.appendChild(block);
+        const chipsEl = block.querySelector(`#wc-p${i}`);
+        ALL_WEIGHT_CLASSES.forEach(wc => {
+          const chip = document.createElement("span");
+          chip.className = "wc-chip" + (assigned.includes(wc) ? " selected" : "");
+          chip.textContent = wc;
+          chip.dataset.wc = wc;
+          chip.addEventListener("click", () => chip.classList.toggle("selected"));
+          chipsEl.appendChild(chip);
+        });
+      }
+    }
+
+    function getWcAssignments() {
+      const result = {};
+      wcPlatformBlocks.querySelectorAll(".platform-wc-block").forEach((block, i) => {
+        const p = i + 1;
+        result[String(p)] = [...block.querySelectorAll(".wc-chip.selected")].map(c => c.dataset.wc);
+      });
+      return result;
+    }
 
     function showStatus(msg, type = "success") {
       statusMsg.innerHTML = `<div class="alert alert-${type} mb-3">${msg}</div>`;
@@ -165,6 +236,7 @@
       document.getElementById("meetDate").value = m.date || "";
       document.getElementById("meetLocation").value = m.location || "";
       document.getElementById("meetPlatforms").value = m.platforms || 1;
+      buildWcBlocks(m.platforms || 1, m.platformWeightClasses || {});
       formTitle.textContent = "Edit Meet";
       formIcon.className = "fa-solid fa-pen-to-square me-2";
       formIcon.style.color = "var(--blue)";
@@ -176,6 +248,7 @@
     function cancelEdit() {
       document.getElementById("editMeetId").value = "";
       form.reset();
+      buildWcBlocks(0);
       formTitle.textContent = "Create New Meet";
       formIcon.className = "fa-solid fa-plus me-2";
       submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Create Meet &amp; Set Active';
@@ -198,12 +271,23 @@
         snap.forEach(d => {
           const m = d.data();
           const isActive = d.id === activeMeetId;
+          // Build platform WC summary
+          const wcSummary = [];
+          if (m.platformWeightClasses) {
+            for (let p = 1; p <= (m.platforms || 1); p++) {
+              const wcs = m.platformWeightClasses[String(p)];
+              if (wcs && wcs.length) wcSummary.push(`P${p}: ${wcs.join(", ")}`);
+            }
+          }
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td class="ps-3 fw-semibold">${escHtml(m.name)}</td>
             <td>${escHtml(m.date || "")}</td>
             <td>${escHtml(m.location || "")}</td>
-            <td>${m.platforms || 1}</td>
+            <td>
+              ${m.platforms || 1}
+              ${wcSummary.length ? `<div style="font-size:.7rem;color:var(--muted);margin-top:.2rem;">${wcSummary.map(s => escHtml(s)).join("<br>")}</div>` : ""}
+            </td>
             <td>${isActive ? '<span class="badge-active">Active</span>' : ""}</td>
             <td class="pe-3 text-end" style="white-space:nowrap;">
               ${isActive ? "" : `<button class="btn btn-sm btn-outline-secondary me-1" data-load="${d.id}">Load</button>`}
@@ -231,17 +315,18 @@
       const date = document.getElementById("meetDate").value;
       const location = document.getElementById("meetLocation").value.trim();
       const platforms = parseInt(document.getElementById("meetPlatforms").value) || 1;
+      const platformWeightClasses = getWcAssignments();
       if (!name) return;
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Saving…';
       try {
         if (editId) {
-          await updateDoc(doc(db, "meets", editId), { name, date, location, platforms });
+          await updateDoc(doc(db, "meets", editId), { name, date, location, platforms, platformWeightClasses });
           showStatus(`<i class="fa-solid fa-check me-2"></i>Meet "<strong>${escHtml(name)}</strong>" updated.`);
           cancelEdit();
         } else {
           const docRef = await addDoc(collection(db, "meets"), {
-            name, date, location, platforms, createdAt: serverTimestamp()
+            name, date, location, platforms, platformWeightClasses, createdAt: serverTimestamp()
           });
           setActiveMeet(docRef.id);
           showStatus(`<i class="fa-solid fa-check me-2"></i>Meet "<strong>${escHtml(name)}</strong>" created and set as active!`);
