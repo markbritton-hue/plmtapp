@@ -351,15 +351,14 @@
       }
 
       const isActiveEvent = event === currentEvent;
-      const controls = isActiveEvent
-        ? (weight > 0 && result !== "g" && result !== "x") ? `
+      const hasResult = result === "g" || result === "x";
+      const controls = hasResult
+        ? `<button class="btn-clear" data-aid="${athleteId}" data-field="${resultKey}" data-val="" title="Remove lift">↩</button>`
+        : isActiveEvent && weight > 0 ? `
           <div class="attempt-controls">
             <button class="btn-good" data-aid="${athleteId}" data-field="${resultKey}" data-val="g" title="Good lift">✓</button>
             <button class="btn-fail" data-aid="${athleteId}" data-field="${resultKey}" data-val="x" title="No lift">✗</button>
           </div>`
-        : (result === "g" || result === "x") ? `
-          <button class="btn-clear" data-aid="${athleteId}" data-field="${resultKey}" data-val="" title="Clear result">↩</button>`
-        : ""
         : "";
 
       return `
