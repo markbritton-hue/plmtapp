@@ -44,13 +44,14 @@
     .athlete-meta { font-size: .78rem; color: var(--muted); }
     .athlete-body { padding: .75rem 1rem; }
 
-    /* Event row */
-    .event-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; }
+    /* Events grid — three columns side by side */
+    .events-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+    .event-col { min-width: 0; }
     .event-label {
       font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-      color: var(--muted); width: 52px; flex-shrink: 0;
+      color: var(--muted); margin-bottom: .4rem;
     }
-    .attempts-group { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .attempts-group { display: flex; flex-direction: column; gap: .35rem; }
 
     /* Attempt chip */
     .attempt-chip {
@@ -218,22 +219,30 @@
           </div>
         </div>
         <div class="athlete-body">
-          ${buildEventRow(id, a, "squat", "Squat")}
-          ${buildEventRow(id, a, "bench", "Bench")}
-          ${buildEventRow(id, a, "dead", "Dead")}
+          <div class="events-grid">
+            <div class="event-col">
+              <div class="event-label">Squat</div>
+              ${buildAttempts(id, a, "squat")}
+            </div>
+            <div class="event-col">
+              <div class="event-label">Bench</div>
+              ${buildAttempts(id, a, "bench")}
+            </div>
+            <div class="event-col">
+              <div class="event-label">Dead</div>
+              ${buildAttempts(id, a, "dead")}
+            </div>
+          </div>
         </div>`;
       return div;
     }
 
-    function buildEventRow(athleteId, a, event, label) {
+    function buildAttempts(athleteId, a, event) {
       return `
-        <div class="event-row">
-          <span class="event-label">${label}</span>
-          <div class="attempts-group">
-            ${buildAttemptCell(athleteId, a, event, 1)}
-            ${buildAttemptCell(athleteId, a, event, 2)}
-            ${buildAttemptCell(athleteId, a, event, 3)}
-          </div>
+        <div class="attempts-group">
+          ${buildAttemptCell(athleteId, a, event, 1)}
+          ${buildAttemptCell(athleteId, a, event, 2)}
+          ${buildAttemptCell(athleteId, a, event, 3)}
         </div>`;
     }
 
