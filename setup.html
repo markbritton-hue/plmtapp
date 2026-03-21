@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meet Setup — PLMTApp</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0f172a;
+      --navy2: #1e293b;
+      --navy3: #334155;
+      --blue: #3b82f6;
+      --blue-dark: #2563eb;
+      --green: #22c55e;
+      --red: #ef4444;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    body { background: var(--navy); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+    .navbar { background: var(--navy2); border-bottom: 1px solid var(--navy3); }
+    .navbar-brand img { height: 32px; }
+    .nav-link { color: var(--muted) !important; }
+    .nav-link:hover, .nav-link.active { color: var(--text) !important; }
+    .card { background: var(--navy2); border: 1px solid var(--navy3); color: var(--text); }
+    .card-header { background: var(--navy3); border-bottom: 1px solid var(--navy3); font-weight: 600; }
+    .form-control, .form-select {
+      background: var(--navy3); border: 1px solid #475569; color: var(--text);
+    }
+    .form-control:focus, .form-select:focus {
+      background: var(--navy3); color: var(--text); border-color: var(--blue); box-shadow: 0 0 0 0.2rem rgba(59,130,246,.25);
+    }
+    .form-control::placeholder { color: var(--muted); }
+    .form-label { color: var(--muted); font-size: .875rem; margin-bottom: .25rem; }
+    .btn-primary { background: var(--blue); border-color: var(--blue); }
+    .btn-primary:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
+    .btn-outline-secondary { color: var(--muted); border-color: var(--navy3); }
+    .btn-outline-secondary:hover { background: var(--navy3); color: var(--text); border-color: var(--navy3); }
+    .table { color: var(--text); }
+    .table thead th { border-color: var(--navy3); color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+    .table tbody tr { border-color: var(--navy3); }
+    .table tbody tr:hover { background: rgba(255,255,255,.03); }
+    .badge-active { background: var(--green); color: #fff; font-size: .7rem; padding: .2em .5em; border-radius: 999px; }
+    .alert-success { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.3); color: #86efac; }
+    .alert-danger { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.3); color: #fca5a5; }
+    .section-title { font-size: 1.1rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg mb-4">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+        <i class="fa-solid fa-trophy" style="color:var(--blue);font-size:1.3rem;"></i>
+        <span style="font-weight:700;font-size:1.1rem;">PLMTApp</span>
+      </a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto gap-2">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="setup.html">Setup</a></li>
+          <li class="nav-item"><a class="nav-link" href="registration.html">Registration</a></li>
+          <li class="nav-item"><a class="nav-link" href="platform.html">Platform</a></li>
+          <li class="nav-item"><a class="nav-link" href="display.html">Display</a></li>
+          <li class="nav-item"><a class="nav-link" href="results.html">Results</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container px-4" style="max-width:900px;">
+    <h1 class="fw-bold mb-1" style="font-size:1.6rem;">Meet Setup</h1>
+    <p class="mb-4" style="color:var(--muted);">Create a new meet or load an existing one.</p>
+
+    <div id="statusMsg"></div>
+
+    <!-- Create Meet Form -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <i class="fa-solid fa-plus me-2" style="color:var(--blue);"></i>Create New Meet
+      </div>
+      <div class="card-body">
+        <form id="createMeetForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Meet Name</label>
+              <input type="text" class="form-control" id="meetName" placeholder="e.g. Spring Invitational 2026" required />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control" id="meetDate" required />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Platforms</label>
+              <input type="number" class="form-control" id="meetPlatforms" min="1" max="10" value="1" required />
+            </div>
+            <div class="col-12">
+              <label class="form-label">Location</label>
+              <input type="text" class="form-control" id="meetLocation" placeholder="e.g. Springfield High School" />
+            </div>
+          </div>
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-floppy-disk me-2"></i>Create Meet &amp; Set Active
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Existing Meets -->
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <span><i class="fa-solid fa-list me-2" style="color:var(--blue);"></i>Existing Meets</span>
+        <button class="btn btn-sm btn-outline-secondary" id="refreshBtn">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-borderless mb-0" id="meetsTable">
+          <thead>
+            <tr>
+              <th class="ps-3">Name</th>
+              <th>Date</th>
+              <th>Location</th>
+              <th>Platforms</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="meetsBody">
+            <tr><td colspan="6" class="text-center py-4" style="color:var(--muted);">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db } from "./firebase-config.js";
+    import {
+      collection, addDoc, getDocs, serverTimestamp, orderBy, query
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { setActiveMeet, getActiveMeetId } from "./meet-utils.js";
+
+    const form = document.getElementById("createMeetForm");
+    const meetsBody = document.getElementById("meetsBody");
+    const statusMsg = document.getElementById("statusMsg");
+
+    function showStatus(msg, type = "success") {
+      statusMsg.innerHTML = `<div class="alert alert-${type} mb-3">${msg}</div>`;
+      setTimeout(() => statusMsg.innerHTML = "", 4000);
+    }
+
+    async function loadMeets() {
+      meetsBody.innerHTML = `<tr><td colspan="6" class="text-center py-4" style="color:var(--muted);">Loading…</td></tr>`;
+      try {
+        const q = query(collection(db, "meets"), orderBy("createdAt", "desc"));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          meetsBody.innerHTML = `<tr><td colspan="6" class="text-center py-4" style="color:var(--muted);">No meets yet.</td></tr>`;
+          return;
+        }
+        const activeMeetId = getActiveMeetId();
+        meetsBody.innerHTML = "";
+        snap.forEach(d => {
+          const m = d.data();
+          const isActive = d.id === activeMeetId;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="ps-3 fw-semibold">${escHtml(m.name)}</td>
+            <td>${escHtml(m.date || "")}</td>
+            <td>${escHtml(m.location || "")}</td>
+            <td>${m.platforms || 1}</td>
+            <td>${isActive ? '<span class="badge-active">Active</span>' : ""}</td>
+            <td class="pe-3">
+              ${isActive ? "" : `<button class="btn btn-sm btn-outline-secondary" data-id="${d.id}">Load</button>`}
+            </td>`;
+          tr.querySelector("button[data-id]")?.addEventListener("click", () => {
+            setActiveMeet(d.id);
+            showStatus(`<i class="fa-solid fa-check me-2"></i>Meet "<strong>${escHtml(m.name)}</strong>" is now active.`);
+            loadMeets();
+          });
+          meetsBody.appendChild(tr);
+        });
+      } catch (e) {
+        meetsBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Error loading meets: ${escHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const name = document.getElementById("meetName").value.trim();
+      const date = document.getElementById("meetDate").value;
+      const location = document.getElementById("meetLocation").value.trim();
+      const platforms = parseInt(document.getElementById("meetPlatforms").value) || 1;
+      if (!name) return;
+      const btn = form.querySelector("button[type=submit]");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Saving…';
+      try {
+        const docRef = await addDoc(collection(db, "meets"), {
+          name, date, location, platforms, createdAt: serverTimestamp()
+        });
+        setActiveMeet(docRef.id);
+        showStatus(`<i class="fa-solid fa-check me-2"></i>Meet "<strong>${escHtml(name)}</strong>" created and set as active!`);
+        form.reset();
+        loadMeets();
+      } catch (e) {
+        showStatus(`Error: ${escHtml(e.message)}`, "danger");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Create Meet &amp; Set Active';
+      }
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", loadMeets);
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    loadMeets();
+  </script>
+</body>
+</html>

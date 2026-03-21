@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registration — PLMTApp</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0f172a; --navy2: #1e293b; --navy3: #334155;
+      --blue: #3b82f6; --blue-dark: #2563eb;
+      --green: #22c55e; --red: #ef4444; --amber: #f59e0b;
+      --text: #f1f5f9; --muted: #94a3b8;
+    }
+    body { background: var(--navy); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+    .navbar { background: var(--navy2); border-bottom: 1px solid var(--navy3); }
+    .nav-link { color: var(--muted) !important; }
+    .nav-link:hover, .nav-link.active { color: var(--text) !important; }
+    .card { background: var(--navy2); border: 1px solid var(--navy3); color: var(--text); }
+    .card-header { background: var(--navy3); border-bottom: 1px solid var(--navy3); font-weight: 600; }
+    .form-control, .form-select {
+      background: var(--navy3); border: 1px solid #475569; color: var(--text);
+    }
+    .form-control:focus, .form-select:focus {
+      background: var(--navy3); color: var(--text); border-color: var(--blue);
+      box-shadow: 0 0 0 0.2rem rgba(59,130,246,.25);
+    }
+    .form-control::placeholder { color: var(--muted); }
+    .form-label { color: var(--muted); font-size: .875rem; margin-bottom: .25rem; }
+    .btn-primary { background: var(--blue); border-color: var(--blue); }
+    .btn-primary:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
+    .btn-outline-secondary { color: var(--muted); border-color: var(--navy3); }
+    .btn-outline-secondary:hover { background: var(--navy3); color: var(--text); border-color: var(--navy3); }
+    .btn-outline-danger { color: var(--red); border-color: rgba(239,68,68,.4); }
+    .btn-outline-danger:hover { background: rgba(239,68,68,.15); color: var(--red); border-color: var(--red); }
+    .table { color: var(--text); }
+    .table thead th { border-color: var(--navy3); color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+    .table tbody tr { border-color: var(--navy3); }
+    .table tbody tr:hover { background: rgba(255,255,255,.03); }
+    .alert-warning { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.3); color: #fcd34d; }
+    .alert-success { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.3); color: #86efac; }
+    .alert-danger { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.3); color: #fca5a5; }
+    .designation-badge {
+      font-size: .7rem; padding: .2em .55em; border-radius: 999px; font-weight: 600;
+    }
+    .badge-varsity { background: rgba(59,130,246,.2); color: #93c5fd; }
+    .badge-jv { background: rgba(148,163,184,.15); color: var(--muted); }
+    .modal-content { background: var(--navy2); border: 1px solid var(--navy3); color: var(--text); }
+    .modal-header { border-bottom: 1px solid var(--navy3); }
+    .modal-footer { border-top: 1px solid var(--navy3); }
+    .btn-close { filter: invert(1); }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg mb-4">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+        <i class="fa-solid fa-trophy" style="color:var(--blue);font-size:1.3rem;"></i>
+        <span style="font-weight:700;font-size:1.1rem;">PLMTApp</span>
+      </a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto gap-2">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="setup.html">Setup</a></li>
+          <li class="nav-item"><a class="nav-link active" href="registration.html">Registration</a></li>
+          <li class="nav-item"><a class="nav-link" href="platform.html">Platform</a></li>
+          <li class="nav-item"><a class="nav-link" href="display.html">Display</a></li>
+          <li class="nav-item"><a class="nav-link" href="results.html">Results</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container px-4" style="max-width:1200px;">
+    <div id="noMeetAlert" class="alert alert-warning d-none">
+      <i class="fa-solid fa-triangle-exclamation me-2"></i>
+      No active meet. <a href="setup.html" style="color:inherit;font-weight:600;">Go to Setup</a> to create or load a meet.
+    </div>
+
+    <div id="mainContent" class="d-none">
+      <div class="d-flex align-items-center justify-content-between mb-1">
+        <h1 class="fw-bold mb-0" style="font-size:1.6rem;">Athlete Registration</h1>
+        <span id="meetBadge" style="font-size:.85rem;color:var(--muted);"></span>
+      </div>
+      <p class="mb-4" style="color:var(--muted);">Weigh-in and opening attempts.</p>
+
+      <div id="statusMsg"></div>
+
+      <!-- Add Athlete Form -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <i class="fa-solid fa-user-plus me-2" style="color:var(--blue);"></i>
+          <span id="formTitle">Add Athlete</span>
+        </div>
+        <div class="card-body">
+          <form id="athleteForm">
+            <input type="hidden" id="editAthleteId" />
+            <div class="row g-3">
+              <!-- Row 1: Basic info -->
+              <div class="col-md-4">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" id="aName" placeholder="Full name" required />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">School / Team</label>
+                <input type="text" class="form-control" id="aSchool" placeholder="School" required />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Weight Class</label>
+                <select class="form-select" id="aWeightClass" required>
+                  <option value="">Select…</option>
+                  <option>97</option><option>105</option><option>114</option>
+                  <option>123</option><option>132</option><option>148</option>
+                  <option>165</option><option>181</option><option>198</option>
+                  <option>220</option><option>242</option><option>275</option>
+                  <option>308</option><option>SHW</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Body Weight (lbs)</label>
+                <input type="number" class="form-control" id="aBodyWeight" min="0" step="0.1" placeholder="0.0" required />
+              </div>
+              <div class="col-md-1">
+                <label class="form-label">Desig.</label>
+                <select class="form-select" id="aDesignation">
+                  <option value="Varsity">Varsity</option>
+                  <option value="JV">JV</option>
+                </select>
+              </div>
+
+              <!-- Row 2: Platform + lift order -->
+              <div class="col-md-2">
+                <label class="form-label">Platform</label>
+                <select class="form-select" id="aPlatform" required></select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Lift Order</label>
+                <input type="number" class="form-control" id="aLiftOrder" min="1" value="1" required />
+              </div>
+
+              <!-- Row 3: Opening attempts -->
+              <div class="col-12">
+                <div style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">
+                  Opening Attempts (lbs)
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Squat 1</label>
+                <input type="number" class="form-control" id="aSquat1" min="0" step="5" placeholder="0" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Bench 1</label>
+                <input type="number" class="form-control" id="aBench1" min="0" step="5" placeholder="0" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Deadlift 1</label>
+                <input type="number" class="form-control" id="aDead1" min="0" step="5" placeholder="0" />
+              </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+              <button type="submit" class="btn btn-primary" id="saveBtn">
+                <i class="fa-solid fa-floppy-disk me-2"></i>Save Athlete
+              </button>
+              <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn" style="display:none;">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Athletes Table -->
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <span>
+            <i class="fa-solid fa-users me-2" style="color:var(--blue);"></i>
+            Registered Athletes <span id="athleteCount" style="color:var(--muted);font-weight:400;font-size:.85rem;"></span>
+          </span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-borderless mb-0">
+              <thead>
+                <tr>
+                  <th class="ps-3">Name</th>
+                  <th>School</th>
+                  <th>Wt Class</th>
+                  <th>Body Wt</th>
+                  <th>Desig.</th>
+                  <th>Platform</th>
+                  <th>Order</th>
+                  <th>Squat 1</th>
+                  <th>Bench 1</th>
+                  <th>Dead 1</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="athletesBody">
+                <tr><td colspan="11" class="text-center py-4" style="color:var(--muted);">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fs-6">Delete Athlete?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="font-size:.9rem;">
+          This will permanently remove <strong id="deleteAthleteName"></strong>.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-sm btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { db } from "./firebase-config.js";
+    import {
+      collection, addDoc, updateDoc, deleteDoc, doc,
+      onSnapshot, query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getActiveMeetId, getActiveMeet } from "./meet-utils.js";
+
+    const meetId = getActiveMeetId();
+    if (!meetId) {
+      document.getElementById("noMeetAlert").classList.remove("d-none");
+    } else {
+      init();
+    }
+
+    async function init() {
+      const meet = await getActiveMeet();
+      if (!meet) {
+        document.getElementById("noMeetAlert").classList.remove("d-none");
+        return;
+      }
+      document.getElementById("mainContent").classList.remove("d-none");
+      document.getElementById("meetBadge").textContent = meet.name;
+
+      // Populate platform dropdown
+      const platformSel = document.getElementById("aPlatform");
+      for (let i = 1; i <= (meet.platforms || 1); i++) {
+        const opt = document.createElement("option");
+        opt.value = i; opt.textContent = `Platform ${i}`;
+        platformSel.appendChild(opt);
+      }
+
+      // Real-time listener
+      const athletesRef = collection(db, "meets", meetId, "athletes");
+      const q = query(athletesRef, orderBy("platform"), orderBy("liftOrder"));
+      onSnapshot(q, snap => renderAthletes(snap));
+
+      // Form submit
+      document.getElementById("athleteForm").addEventListener("submit", saveAthlete);
+      document.getElementById("cancelEditBtn").addEventListener("click", cancelEdit);
+    }
+
+    let deleteModal, pendingDeleteId;
+    deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"));
+    document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+      if (!pendingDeleteId) return;
+      await deleteDoc(doc(db, "meets", meetId, "athletes", pendingDeleteId));
+      deleteModal.hide();
+    });
+
+    function renderAthletes(snap) {
+      const tbody = document.getElementById("athletesBody");
+      document.getElementById("athleteCount").textContent = `(${snap.size})`;
+      if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4" style="color:var(--muted);">No athletes yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = "";
+      snap.forEach(d => {
+        const a = d.data();
+        const tr = document.createElement("tr");
+        const desigClass = a.designation === "JV" ? "badge-jv" : "badge-varsity";
+        tr.innerHTML = `
+          <td class="ps-3 fw-semibold">${esc(a.name)}</td>
+          <td>${esc(a.school)}</td>
+          <td>${esc(a.weightClass)}</td>
+          <td>${a.bodyWeight || "—"}</td>
+          <td><span class="designation-badge ${desigClass}">${esc(a.designation)}</span></td>
+          <td>${a.platform}</td>
+          <td>${a.liftOrder}</td>
+          <td>${a.squat1 || "—"}</td>
+          <td>${a.bench1 || "—"}</td>
+          <td>${a.dead1 || "—"}</td>
+          <td class="pe-3">
+            <button class="btn btn-sm btn-outline-secondary me-1" data-edit="${d.id}">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" data-delete="${d.id}" data-name="${esc(a.name)}">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>`;
+        tr.querySelector("[data-edit]").addEventListener("click", () => startEdit(d.id, a));
+        tr.querySelector("[data-delete]").addEventListener("click", e => {
+          pendingDeleteId = d.id;
+          document.getElementById("deleteAthleteName").textContent = a.name;
+          deleteModal.show();
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function startEdit(id, a) {
+      document.getElementById("editAthleteId").value = id;
+      document.getElementById("formTitle").textContent = "Edit Athlete";
+      document.getElementById("aName").value = a.name || "";
+      document.getElementById("aSchool").value = a.school || "";
+      document.getElementById("aWeightClass").value = a.weightClass || "";
+      document.getElementById("aBodyWeight").value = a.bodyWeight || "";
+      document.getElementById("aDesignation").value = a.designation || "Varsity";
+      document.getElementById("aPlatform").value = a.platform || 1;
+      document.getElementById("aLiftOrder").value = a.liftOrder || 1;
+      document.getElementById("aSquat1").value = a.squat1 || "";
+      document.getElementById("aBench1").value = a.bench1 || "";
+      document.getElementById("aDead1").value = a.dead1 || "";
+      document.getElementById("cancelEditBtn").style.display = "";
+      document.getElementById("saveBtn").innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Update Athlete';
+      document.getElementById("athleteForm").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function cancelEdit() {
+      document.getElementById("athleteForm").reset();
+      document.getElementById("editAthleteId").value = "";
+      document.getElementById("formTitle").textContent = "Add Athlete";
+      document.getElementById("cancelEditBtn").style.display = "none";
+      document.getElementById("saveBtn").innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>Save Athlete';
+    }
+
+    async function saveAthlete(e) {
+      e.preventDefault();
+      const editId = document.getElementById("editAthleteId").value;
+      const data = {
+        name: document.getElementById("aName").value.trim(),
+        school: document.getElementById("aSchool").value.trim(),
+        weightClass: document.getElementById("aWeightClass").value,
+        bodyWeight: parseFloat(document.getElementById("aBodyWeight").value) || 0,
+        designation: document.getElementById("aDesignation").value,
+        platform: parseInt(document.getElementById("aPlatform").value) || 1,
+        liftOrder: parseInt(document.getElementById("aLiftOrder").value) || 1,
+        squat1: parseInt(document.getElementById("aSquat1").value) || 0,
+        squat1Result: editId ? undefined : "",
+        bench1: parseInt(document.getElementById("aBench1").value) || 0,
+        bench1Result: editId ? undefined : "",
+        dead1: parseInt(document.getElementById("aDead1").value) || 0,
+        dead1Result: editId ? undefined : "",
+      };
+
+      if (!editId) {
+        // New athlete — add all default fields
+        Object.assign(data, {
+          squat1Result: "", squat2: 0, squat2Result: "", squat3: 0, squat3Result: "",
+          bench1Result: "", bench2: 0, bench2Result: "", bench3: 0, bench3Result: "",
+          dead1Result: "", dead2: 0, dead2Result: "", dead3: 0, dead3Result: "",
+        });
+      }
+
+      // Remove undefined keys
+      Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
+
+      const btn = document.getElementById("saveBtn");
+      btn.disabled = true;
+      try {
+        if (editId) {
+          await updateDoc(doc(db, "meets", meetId, "athletes", editId), data);
+        } else {
+          await addDoc(collection(db, "meets", meetId, "athletes"), data);
+        }
+        cancelEdit();
+        showStatus(`<i class="fa-solid fa-check me-2"></i>Athlete ${editId ? "updated" : "added"}!`);
+      } catch (err) {
+        showStatus(`Error: ${esc(err.message)}`, "danger");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function showStatus(msg, type = "success") {
+      const el = document.getElementById("statusMsg");
+      el.innerHTML = `<div class="alert alert-${type} mb-3">${msg}</div>`;
+      setTimeout(() => el.innerHTML = "", 4000);
+    }
+
+    function esc(str) {
+      return String(str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+  </script>
+</body>
+</html>
