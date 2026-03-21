@@ -115,8 +115,6 @@
                   <th>Wt Class</th>
                   <th>Body Wt</th>
                   <th>Desig.</th>
-                  <th>Platform</th>
-                  <th>Order</th>
                   <th>Squat 1</th>
                   <th>Bench 1</th>
                   <th>Dead 1</th>
@@ -124,7 +122,7 @@
                 </tr>
               </thead>
               <tbody id="athletesBody">
-                <tr><td colspan="11" class="text-center py-4" style="color:var(--muted);">Loading…</td></tr>
+                <tr><td colspan="9" class="text-center py-4" style="color:var(--muted);">Loading…</td></tr>
               </tbody>
             </table>
           </div>
@@ -175,14 +173,6 @@
               <div class="col-md-3">
                 <label class="form-label">Body Weight (lbs)</label>
                 <input type="number" class="form-control" id="aBodyWeight" min="0" step="0.1" placeholder="0.0" required />
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Platform</label>
-                <select class="form-select" id="aPlatform" required></select>
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Lift Order</label>
-                <input type="number" class="form-control" id="aLiftOrder" min="1" value="1" required />
               </div>
 
               <div class="col-12">
@@ -256,14 +246,6 @@
       document.getElementById("mainContent").classList.remove("d-none");
       document.getElementById("meetBadge").textContent = meet.name;
 
-      // Populate platform dropdown
-      const platformSel = document.getElementById("aPlatform");
-      for (let i = 1; i <= (meet.platforms || 1); i++) {
-        const opt = document.createElement("option");
-        opt.value = i; opt.textContent = `Platform ${i}`;
-        platformSel.appendChild(opt);
-      }
-
       // Real-time listener
       const q = query(collection(db, "meets", meetId, "athletes"), orderBy("platform"), orderBy("liftOrder"));
       onSnapshot(q, snap => renderAthletes(snap));
@@ -290,8 +272,6 @@
       document.getElementById("aDesignation").value = a.designation || "Varsity";
       document.getElementById("aWeightClass").value = a.weightClass || "";
       document.getElementById("aBodyWeight").value = a.bodyWeight || "";
-      document.getElementById("aPlatform").value = a.platform || 1;
-      document.getElementById("aLiftOrder").value = a.liftOrder || 1;
       document.getElementById("aSquat1").value = a.squat1 || "";
       document.getElementById("aBench1").value = a.bench1 || "";
       document.getElementById("aDead1").value = a.dead1 || "";
@@ -319,8 +299,6 @@
         weightClass: document.getElementById("aWeightClass").value,
         bodyWeight: parseFloat(document.getElementById("aBodyWeight").value) || 0,
         designation: document.getElementById("aDesignation").value,
-        platform: parseInt(document.getElementById("aPlatform").value) || 1,
-        liftOrder: parseInt(document.getElementById("aLiftOrder").value) || 1,
         squat1: parseInt(document.getElementById("aSquat1").value) || 0,
         bench1: parseInt(document.getElementById("aBench1").value) || 0,
         dead1: parseInt(document.getElementById("aDead1").value) || 0,
@@ -363,7 +341,7 @@
       const tbody = document.getElementById("athletesBody");
       document.getElementById("athleteCount").textContent = `(${snap.size})`;
       if (snap.empty) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4" style="color:var(--muted);">No athletes yet. Click <strong>Add Athlete</strong> to register one.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4" style="color:var(--muted);">No athletes yet. Click <strong>Add Athlete</strong> to register one.</td></tr>`;
         return;
       }
       tbody.innerHTML = "";
@@ -377,8 +355,6 @@
           <td>${esc(a.weightClass)}</td>
           <td>${a.bodyWeight || "—"}</td>
           <td><span class="designation-badge ${desigClass}">${esc(a.designation)}</span></td>
-          <td>${a.platform}</td>
-          <td>${a.liftOrder}</td>
           <td>${a.squat1 || "—"}</td>
           <td>${a.bench1 || "—"}</td>
           <td>${a.dead1 || "—"}</td>
