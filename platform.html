@@ -366,7 +366,26 @@
       const btn = e.target.closest("[data-field][data-val]");
       if (!btn) return;
       const { aid, field, val } = btn.dataset;
-      await updateDoc(doc(db, "meets", meetId, "athletes", aid), { [field]: val });
+      const update = { [field]: val };
+
+      // On a failed lift, auto-fill the next attempt with the same weight
+      if (val === "x") {
+        const match = field.match(/^(\w+?)(\d)Result$/);
+        if (match) {
+          const ev = match[1], num = parseInt(match[2]);
+          if (num < 3) {
+            const athleteData = lastSnap?.docs.find(d => d.id === aid)?.data();
+            if (athleteData) {
+              const nextWeightKey = `${ev}${num + 1}`;
+              if (!athleteData[nextWeightKey] || athleteData[nextWeightKey] === 0) {
+                update[nextWeightKey] = athleteData[`${ev}${num}`];
+              }
+            }
+          }
+        }
+      }
+
+      await updateDoc(doc(db, "meets", meetId, "athletes", aid), update);
     });
 
     document.getElementById("athleteList").addEventListener("change", async e => {
