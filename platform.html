@@ -243,29 +243,36 @@
         return;
       }
 
-      // Sort by next attempt weight for current event (ascending); done athletes go last
       const athletes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-      // Returns true if athlete's most recent completed attempt for the event was a fail
-      function justFailed(a, ev) {
-        for (let n = 3; n >= 1; n--) {
-          const r = a[`${ev}${n}Result`] ?? "";
-          if (r === "x") return (a[`${ev}${n + 1}Result`] ?? "") === "";
-          if (r === "g") return false;
+      // Current round = the attempt number where at least one athlete is still pending.
+      // Once everyone finishes that attempt, round advances and we naturally sort by next weights.
+      function getCurrentRound(list, ev) {
+        let min = 3;
+        for (const a of list) {
+          let done = 0;
+          for (let n = 1; n <= 3; n++) {
+            if ((a[`${ev}${n}Result`] ?? "") !== "") done = n;
+            else break;
+          }
+          if (done < 3) min = Math.min(min, done);
         }
-        return false;
+        return Math.min(min + 1, 3);
       }
 
+      // Within a round: sort by that round's declared weight (ascending).
+      // Athletes who've already lifted this round go after those who haven't.
+      // When everyone finishes the round, getCurrentRound advances and reorder kicks in.
+      const round = getCurrentRound(athletes, currentEvent);
       athletes.sort((a, b) => {
-        const wa = getNextAttemptWeight(a, currentEvent);
-        const wb = getNextAttemptWeight(b, currentEvent);
-        if (wa === null && wb === null) return (a.liftOrder || 0) - (b.liftOrder || 0);
-        if (wa === null) return 1;
-        if (wb === null) return -1;
-        if (wa !== wb) return wa - wb;
-        // Same weight: athletes who just failed go after those who haven't lifted yet
-        const af = justFailed(a, currentEvent), bf = justFailed(b, currentEvent);
-        if (af !== bf) return af ? 1 : -1;
+        const aDone = (a[`${currentEvent}${round}Result`] ?? "") !== "";
+        const bDone = (b[`${currentEvent}${round}Result`] ?? "") !== "";
+        if (aDone !== bDone) return aDone ? 1 : -1;
+        if (!aDone) {
+          const wa = a[`${currentEvent}${round}`] || 0;
+          const wb = b[`${currentEvent}${round}`] || 0;
+          if (wa !== wb) return wa - wb;
+        }
         return (a.liftOrder || 0) - (b.liftOrder || 0);
       });
 
