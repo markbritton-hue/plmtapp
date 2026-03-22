@@ -119,8 +119,10 @@
     }
     .plate-chip {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 3rem; height: 3rem; border-radius: 50%;
-      font-size: .85rem; font-weight: 800; flex-shrink: 0;
+      width: 4rem; height: 4rem; border-radius: 50%;
+      font-size: 1rem; font-weight: 900; flex-shrink: 0;
+      border: 3px solid transparent;
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
     }
     .plate-bar {
       font-size: .7rem; font-weight: 700; letter-spacing: .08em;
@@ -257,12 +259,12 @@
 
     // Plate colors for visual display
     const PLATE_COLORS = {
-      45:  { bg: "#1d4ed8", text: "#fff" },
-      35:  { bg: "#15803d", text: "#fff" },
-      25:  { bg: "#b45309", text: "#fff" },
-      10:  { bg: "#6b7280", text: "#fff" },
-      5:   { bg: "#374151", text: "#e5e7eb" },
-      2.5: { bg: "#1e293b", text: "#94a3b8" },
+      45:  { bg: "#2563eb", text: "#fff",    border: "#60a5fa" },
+      35:  { bg: "#16a34a", text: "#fff",    border: "#4ade80" },
+      25:  { bg: "#dc2626", text: "#fff",    border: "#f87171" },
+      10:  { bg: "#d97706", text: "#fff",    border: "#fbbf24" },
+      5:   { bg: "#7c3aed", text: "#fff",    border: "#a78bfa" },
+      2.5: { bg: "#0e7490", text: "#fff",    border: "#22d3ee" },
     };
 
     function calcPlates(totalLbs) {
@@ -289,7 +291,7 @@
         Array(count).fill(plate)
       ).map(p => {
         const c = PLATE_COLORS[p] || { bg: "#334155", text: "#fff" };
-        return `<span class="plate-chip" style="background:${c.bg};color:${c.text};">${p}</span>`;
+        return `<span class="plate-chip" style="background:${c.bg};color:${c.text};border-color:${c.border};">${p}</span>`;
       }).join("");
       return `
         <div class="plate-row">
