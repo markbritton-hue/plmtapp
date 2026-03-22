@@ -244,6 +244,17 @@
 
       // Sort by next attempt weight for current event (ascending); done athletes go last
       const athletes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Returns true if athlete's most recent completed attempt for the event was a fail
+      function justFailed(a, ev) {
+        for (let n = 3; n >= 1; n--) {
+          const r = a[`${ev}${n}Result`] ?? "";
+          if (r === "x") return (a[`${ev}${n + 1}Result`] ?? "") === "";
+          if (r === "g") return false;
+        }
+        return false;
+      }
+
       athletes.sort((a, b) => {
         const wa = getNextAttemptWeight(a, currentEvent);
         const wb = getNextAttemptWeight(b, currentEvent);
@@ -251,7 +262,10 @@
         if (wa === null) return 1;
         if (wb === null) return -1;
         if (wa !== wb) return wa - wb;
-        return (a.liftOrder || 0) - (b.liftOrder || 0); // tiebreak by lift order
+        // Same weight: athletes who just failed go after those who haven't lifted yet
+        const af = justFailed(a, currentEvent), bf = justFailed(b, currentEvent);
+        if (af !== bf) return af ? 1 : -1;
+        return (a.liftOrder || 0) - (b.liftOrder || 0);
       });
 
       list.innerHTML = "";
