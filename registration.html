@@ -533,7 +533,7 @@
             </button>
           </td>`;
         if (idx % 2 === 1) tr.querySelectorAll("td").forEach(td => {
-          td.style.setProperty("background", "rgba(255,255,255,.06)", "important");
+          td.style.setProperty("background-color", "rgba(100,149,237,.4)", "important");
           td.style.setProperty("box-shadow", "none", "important");
         });
         tr.querySelector("[data-edit]").addEventListener("click", () => openEdit(a.id, a));
