@@ -264,9 +264,19 @@
       // Athletes who've already lifted this round go after those who haven't.
       // When everyone finishes the round, getCurrentRound advances and reorder kicks in.
       const round = getCurrentRound(athletes, currentEvent);
+
+      // An athlete counts as "done" for this round only when they have a result
+      // AND their next attempt weight is entered (or it's attempt 3 — no next needed).
+      function isDone(a) {
+        const result = a[`${currentEvent}${round}Result`] ?? "";
+        if (result === "") return false;
+        if (round === 3) return true;
+        return (a[`${currentEvent}${round + 1}`] || 0) > 0;
+      }
+
       athletes.sort((a, b) => {
-        const aDone = (a[`${currentEvent}${round}Result`] ?? "") !== "";
-        const bDone = (b[`${currentEvent}${round}Result`] ?? "") !== "";
+        const aDone = isDone(a);
+        const bDone = isDone(b);
         if (aDone !== bDone) return aDone ? 1 : -1;
         if (!aDone) {
           const wa = a[`${currentEvent}${round}`] || 0;
