@@ -104,11 +104,32 @@
 
       <!-- Athletes table -->
       <div class="card">
-        <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
           <span>
             <i class="fa-solid fa-users me-2" style="color:var(--blue);"></i>
             Athletes <span id="athleteCount" style="color:var(--muted);font-weight:400;font-size:.85rem;"></span>
           </span>
+          <div class="d-flex gap-2 flex-wrap align-items-center">
+            <div style="position:relative;">
+              <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:.65rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.8rem;pointer-events:none;"></i>
+              <input id="filterSearch" type="text" placeholder="Search name…"
+                style="background:var(--navy);border:1px solid #475569;color:var(--text);border-radius:6px;padding:.3rem .6rem .3rem 2rem;font-size:.85rem;width:170px;">
+            </div>
+            <select id="filterSchool" style="background:var(--navy);border:1px solid #475569;color:var(--text);border-radius:6px;padding:.3rem .6rem;font-size:.85rem;">
+              <option value="">All Schools</option>
+            </select>
+            <select id="filterWC" style="background:var(--navy);border:1px solid #475569;color:var(--text);border-radius:6px;padding:.3rem .6rem;font-size:.85rem;">
+              <option value="">All Wt Classes</option>
+            </select>
+            <select id="filterDesig" style="background:var(--navy);border:1px solid #475569;color:var(--text);border-radius:6px;padding:.3rem .6rem;font-size:.85rem;">
+              <option value="">Varsity + JV</option>
+              <option value="Varsity">Varsity</option>
+              <option value="JV">JV</option>
+            </select>
+            <button id="clearFiltersBtn" class="btn btn-sm btn-outline-secondary" title="Clear filters">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
@@ -413,19 +434,83 @@
       }
     });
 
+    // ── Filters ──────────────────────────────────────────────────────────────
+
+    const WC_ORDER = ["97","105","114","123","132","145","148","155","165","181","194","198","207","220","242","275","308","SHW"];
+
+    function getFilters() {
+      return {
+        search: document.getElementById("filterSearch").value.trim().toLowerCase(),
+        school: document.getElementById("filterSchool").value,
+        wc:     document.getElementById("filterWC").value,
+        desig:  document.getElementById("filterDesig").value,
+      };
+    }
+
+    function applyFilters() {
+      const { search, school, wc, desig } = getFilters();
+      const filtered = currentAthletes.filter(a => {
+        if (search && !a.name?.toLowerCase().includes(search)) return false;
+        if (school && a.school !== school) return false;
+        if (wc && a.weightClass !== wc) return false;
+        if (desig && a.designation !== desig) return false;
+        return true;
+      });
+      renderRows(filtered);
+      document.getElementById("athleteCount").textContent =
+        filtered.length === currentAthletes.length
+          ? `(${currentAthletes.length})`
+          : `(${filtered.length} of ${currentAthletes.length})`;
+    }
+
+    function populateFilterDropdowns() {
+      const schools = [...new Set(currentAthletes.map(a => a.school).filter(Boolean))].sort();
+      const wcs = [...new Set(currentAthletes.map(a => a.weightClass).filter(Boolean))]
+        .sort((a, b) => WC_ORDER.indexOf(a) - WC_ORDER.indexOf(b));
+
+      const schoolSel = document.getElementById("filterSchool");
+      const prev = schoolSel.value;
+      schoolSel.innerHTML = `<option value="">All Schools</option>` +
+        schools.map(s => `<option${s === prev ? " selected" : ""}>${esc(s)}</option>`).join("");
+
+      const wcSel = document.getElementById("filterWC");
+      const prevWC = wcSel.value;
+      wcSel.innerHTML = `<option value="">All Wt Classes</option>` +
+        wcs.map(w => `<option${w === prevWC ? " selected" : ""}>${esc(w)}</option>`).join("");
+    }
+
+    ["filterSearch","filterSchool","filterWC","filterDesig"].forEach(id =>
+      document.getElementById(id).addEventListener("input", applyFilters)
+    );
+
+    document.getElementById("clearFiltersBtn").addEventListener("click", () => {
+      document.getElementById("filterSearch").value = "";
+      document.getElementById("filterSchool").value = "";
+      document.getElementById("filterWC").value = "";
+      document.getElementById("filterDesig").value = "";
+      applyFilters();
+    });
+
     // ── Render ───────────────────────────────────────────────────────────────
 
     function renderAthletes(snap) {
       currentAthletes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      populateFilterDropdowns();
+      applyFilters();
+    }
+
+    function renderRows(athletes) {
       const tbody = document.getElementById("athletesBody");
-      document.getElementById("athleteCount").textContent = `(${snap.size})`;
-      if (snap.empty) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4" style="color:var(--muted);">No athletes yet. Click <strong>Add Athlete</strong> to register one.</td></tr>`;
+      if (athletes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-4" style="color:var(--muted);">${
+          currentAthletes.length === 0
+            ? 'No athletes yet. Click <strong>Add Athlete</strong> to register one.'
+            : 'No athletes match the current filters.'
+        }</td></tr>`;
         return;
       }
       tbody.innerHTML = "";
-      snap.forEach(d => {
-        const a = d.data();
+      athletes.forEach(a => {
         const desigClass = a.designation === "JV" ? "badge-jv" : "badge-varsity";
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -440,16 +525,16 @@
           <td>${a.bench1 || "—"}</td>
           <td>${a.dead1 || "—"}</td>
           <td class="pe-3 text-end" style="white-space:nowrap;">
-            <button class="btn btn-sm btn-outline-secondary me-1" data-edit="${d.id}" title="Edit">
+            <button class="btn btn-sm btn-outline-secondary me-1" data-edit="${a.id}" title="Edit">
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
-            <button class="btn btn-sm btn-outline-danger" data-delete="${d.id}" title="Delete">
+            <button class="btn btn-sm btn-outline-danger" data-delete="${a.id}" title="Delete">
               <i class="fa-solid fa-trash"></i>
             </button>
           </td>`;
-        tr.querySelector("[data-edit]").addEventListener("click", () => openEdit(d.id, a));
+        tr.querySelector("[data-edit]").addEventListener("click", () => openEdit(a.id, a));
         tr.querySelector("[data-delete]").addEventListener("click", () => {
-          pendingDeleteId = d.id;
+          pendingDeleteId = a.id;
           document.getElementById("deleteAthleteName").textContent = a.name;
           deleteModal.show();
         });
