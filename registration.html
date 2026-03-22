@@ -535,6 +535,7 @@
         if (idx % 2 === 1) tr.querySelectorAll("td").forEach(td => {
           td.style.setProperty("background-color", "#3a5068", "important");
           td.style.setProperty("box-shadow", "none", "important");
+          td.style.setProperty("color", "#ffffff", "important");
         });
         tr.querySelector("[data-edit]").addEventListener("click", () => openEdit(a.id, a));
         tr.querySelector("[data-delete]").addEventListener("click", () => {
