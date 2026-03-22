@@ -386,13 +386,8 @@
 
       const weightDisplay = weight > 0 ? `${weight}` : "—";
 
-      // For attempt #2 and #3, allow weight editing if previous attempt is done
-      const prevResultKey = num > 1 ? `${event}${num-1}Result` : null;
-      const prevDone = num === 1 || (a[prevResultKey] === "g" || a[prevResultKey] === "x");
-
       let weightSection;
-      if (event === currentEvent && num > 1 && prevDone) {
-        // Editable weight input for active event's 2nd/3rd attempts
+      if (event === currentEvent) {
         weightSection = `
           <input class="weight-input" type="number" step="5" min="0"
             value="${weight > 0 ? weight : ""}"
