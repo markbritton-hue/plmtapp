@@ -170,7 +170,8 @@
     let currentEvent = "squat";
     let lastSnap = null;
     let unsubscribe = null;
-    let pendingFocusAid = null; // athlete ID to auto-focus next attempt input after re-render
+    let pendingFocusAid = null;   // athlete ID to auto-focus next attempt input after re-render
+    let pendingAutoFill = null;   // { aid, field, value } — fill weight locally after fail, save on tab/Enter
 
     async function init() {
       const meet = await getActiveMeet();
@@ -282,6 +283,19 @@
           input.select();
         }
         pendingFocusAid = null;
+      }
+
+      // After re-render, populate and focus the auto-filled weight for a failed lift.
+      // Saving (and thus reordering) is deferred until they tab or press Enter.
+      if (pendingAutoFill) {
+        const { aid, field, value } = pendingAutoFill;
+        const input = list.querySelector(`input.weight-input[data-aid="${aid}"][data-field="${field}"]`);
+        if (input) {
+          input.value = value;
+          input.focus();
+          input.select();
+        }
+        pendingAutoFill = null;
       }
     }
 
@@ -411,7 +425,8 @@
         if (match && parseInt(match[2]) < 3) pendingFocusAid = aid;
       }
 
-      // On a failed lift, auto-fill the next attempt with the same weight
+      // On a failed lift, locally fill the next attempt input with the same weight and focus it.
+      // The weight is NOT written to Firestore yet — the reorder triggers when they tab/Enter out.
       if (val === "x") {
         const match = field.match(/^(\w+?)(\d)Result$/);
         if (match) {
@@ -420,8 +435,9 @@
             const athleteData = lastSnap?.docs.find(d => d.id === aid)?.data();
             if (athleteData) {
               const nextWeightKey = `${ev}${num + 1}`;
-              if (!athleteData[nextWeightKey] || athleteData[nextWeightKey] === 0) {
-                update[nextWeightKey] = athleteData[`${ev}${num}`];
+              const sameWeight = athleteData[`${ev}${num}`];
+              if (sameWeight && (!athleteData[nextWeightKey] || athleteData[nextWeightKey] === 0)) {
+                pendingAutoFill = { aid, field: nextWeightKey, value: sameWeight };
               }
             }
           }
