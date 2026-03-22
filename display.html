@@ -434,13 +434,16 @@
       deckCard.className = "ondeck-card";
       if (onDeck) {
         deckCard.innerHTML = `
-          <div>
+          <div style="flex-shrink:0;">
             <div class="ondeck-label"><i class="fa-solid fa-angles-right me-1"></i>On Deck</div>
             <div class="ondeck-name">${esc(onDeck.name)} ${desigBadge(onDeck)}</div>
             <div class="ondeck-meta">${esc(onDeck.school)} · ${esc(onDeck.weightClass)} lbs class</div>
           </div>
-          <div class="ondeck-weight">
-            ${onDeckNext ? onDeckNext.weight : "—"}<span class="ondeck-weight-unit">lbs</span>
+          <div style="display:flex;align-items:center;gap:1.5rem;flex:1;justify-content:flex-end;min-width:0;">
+            <div class="ondeck-weight">
+              ${onDeckNext ? onDeckNext.weight : "—"}<span class="ondeck-weight-unit">lbs</span>
+            </div>
+            ${onDeckNext && onDeckNext.weight > 0 ? `<div style="flex:1;min-width:0;display:flex;align-items:center;">${renderPlates(onDeckNext.weight)}</div>` : ""}
           </div>
         `;
       } else {
