@@ -417,14 +417,18 @@
 
       const isActiveEvent = event === currentEvent;
       const hasResult = result === "g" || result === "x";
+      const clearBtn = (weight > 0 || hasResult)
+        ? `<button class="btn-clear" data-aid="${athleteId}" data-field="${resultKey}" data-val="" title="Clear attempt"><i class="fa-solid fa-xmark"></i></button>`
+        : "";
+
       const controls = hasResult
-        ? `<button class="btn-clear" data-aid="${athleteId}" data-field="${resultKey}" data-val="" title="Remove lift"><i class="fa-solid fa-rotate-left"></i></button>`
+        ? clearBtn
         : isLifting && isActiveEvent && weight > 0 ? `
           <div class="attempt-controls">
             <button class="btn-good" data-aid="${athleteId}" data-field="${resultKey}" data-val="g" title="Good lift">✓</button>
             <button class="btn-fail" data-aid="${athleteId}" data-field="${resultKey}" data-val="x" title="No lift">✗</button>
-          </div>`
-        : "";
+          </div>${clearBtn}`
+        : clearBtn;
 
       return `
         <div style="display:flex;align-items:center;gap:.35rem;">
@@ -443,10 +447,10 @@
       const { aid, field, val } = btn.dataset;
       const update = { [field]: val };
 
-      // When clearing a 2nd or 3rd attempt, also wipe its weight
+      // When clearing any attempt, also wipe its weight (attempt 2/3 always; attempt 1 too)
       if (val === "") {
         const match = field.match(/^(\w+?)(\d)Result$/);
-        if (match && parseInt(match[2]) > 1) {
+        if (match) {
           update[`${match[1]}${match[2]}`] = 0;
         }
       }
