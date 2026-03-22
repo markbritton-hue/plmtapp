@@ -225,7 +225,12 @@
     function getNextAttemptWeight(a, event) {
       for (let n = 1; n <= 3; n++) {
         const result = a[`${event}${n}Result`] ?? "";
-        if (result === "") return a[`${event}${n}`] || 0;
+        const weight = a[`${event}${n}`] || 0;
+        if (result === "") {
+          // Pending attempt — if weight not set yet (2nd/3rd not entered), use previous attempt's
+          // weight so the athlete stays in their current position until weight is filled in
+          return weight > 0 ? weight : (n > 1 ? (a[`${event}${n - 1}`] || 0) : 0);
+        }
       }
       return null; // all done
     }
@@ -294,31 +299,31 @@
           <div class="events-grid">
             <div class="event-col">
               <div class="event-label">Squat</div>
-              ${buildAttempts(id, a, "squat")}
+              ${buildAttempts(id, a, "squat", position === "lifting")}
             </div>
             <div class="event-col">
               <div class="event-label">Bench</div>
-              ${buildAttempts(id, a, "bench")}
+              ${buildAttempts(id, a, "bench", position === "lifting")}
             </div>
             <div class="event-col">
               <div class="event-label">Dead</div>
-              ${buildAttempts(id, a, "dead")}
+              ${buildAttempts(id, a, "dead", position === "lifting")}
             </div>
           </div>
         </div>`;
       return div;
     }
 
-    function buildAttempts(athleteId, a, event) {
+    function buildAttempts(athleteId, a, event, isLifting = false) {
       return `
         <div class="attempts-group">
-          ${buildAttemptCell(athleteId, a, event, 1)}
-          ${buildAttemptCell(athleteId, a, event, 2)}
-          ${buildAttemptCell(athleteId, a, event, 3)}
+          ${buildAttemptCell(athleteId, a, event, 1, isLifting)}
+          ${buildAttemptCell(athleteId, a, event, 2, isLifting)}
+          ${buildAttemptCell(athleteId, a, event, 3, isLifting)}
         </div>`;
     }
 
-    function buildAttemptCell(athleteId, a, event, num) {
+    function buildAttemptCell(athleteId, a, event, num, isLifting = false) {
       const weightKey = `${event}${num}`;
       const resultKey = `${event}${num}Result`;
       const weight = a[weightKey];
@@ -354,7 +359,7 @@
       const hasResult = result === "g" || result === "x";
       const controls = hasResult
         ? `<button class="btn-clear" data-aid="${athleteId}" data-field="${resultKey}" data-val="" title="Remove lift"><i class="fa-solid fa-rotate-left"></i></button>`
-        : isActiveEvent && weight > 0 ? `
+        : isLifting && isActiveEvent && weight > 0 ? `
           <div class="attempt-controls">
             <button class="btn-good" data-aid="${athleteId}" data-field="${resultKey}" data-val="g" title="Good lift">✓</button>
             <button class="btn-fail" data-aid="${athleteId}" data-field="${resultKey}" data-val="x" title="No lift">✗</button>
