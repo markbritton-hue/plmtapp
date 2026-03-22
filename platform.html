@@ -417,12 +417,28 @@
       await updateDoc(doc(db, "meets", meetId, "athletes", aid), update);
     });
 
-    document.getElementById("athleteList").addEventListener("change", async e => {
-      const inp = e.target.closest("input.weight-input");
-      if (!inp) return;
+    async function saveWeightInput(inp) {
       const { aid, field } = inp.dataset;
       const val = parseInt(inp.value) || 0;
-      await updateDoc(doc(db, "meets", meetId, "athletes", aid), { [field]: val });
+      if (val > 0) {
+        await updateDoc(doc(db, "meets", meetId, "athletes", aid), { [field]: val });
+      }
+    }
+
+    // Save on blur (focus leaves field)
+    document.getElementById("athleteList").addEventListener("focusout", async e => {
+      const inp = e.target.closest("input.weight-input");
+      if (!inp) return;
+      await saveWeightInput(inp);
+    });
+
+    // Save on Enter key
+    document.getElementById("athleteList").addEventListener("keydown", async e => {
+      if (e.key !== "Enter") return;
+      const inp = e.target.closest("input.weight-input");
+      if (!inp) return;
+      e.preventDefault();
+      await saveWeightInput(inp);
     });
 
     function esc(str) {
