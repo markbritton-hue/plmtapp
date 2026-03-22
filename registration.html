@@ -37,7 +37,7 @@
     .table { color: var(--text); }
     .table thead th { border-color: var(--navy3); color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
     .table tbody tr { border-color: var(--navy3); }
-    .table tbody tr:nth-child(even) td { background: rgba(255,255,255,.07) !important; }
+    .row-alt td { background: rgba(255,255,255,.07) !important; }
     .table tbody tr:hover { background: rgba(59,130,246,.08); }
     .alert-warning { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.3); color: #fcd34d; }
     .alert-success { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.3); color: #86efac; }
@@ -511,9 +511,10 @@
         return;
       }
       tbody.innerHTML = "";
-      athletes.forEach(a => {
+      athletes.forEach((a, idx) => {
         const desigClass = a.designation === "JV" ? "badge-jv" : "badge-varsity";
         const tr = document.createElement("tr");
+        if (idx % 2 === 1) tr.className = "row-alt";
         tr.innerHTML = `
           <td class="ps-3 fw-semibold">${esc(a.name)}</td>
           <td>${esc(a.school)}</td>
