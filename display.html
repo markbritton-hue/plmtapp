@@ -112,6 +112,26 @@
     .badge-varsity { background: rgba(168,85,247,.2); color: #d8b4fe; border: 1px solid rgba(168,85,247,.4); }
     .badge-jv      { background: rgba(34,197,94,.2);  color: #4ade80;  border: 1px solid rgba(34,197,94,.4); }
 
+    /* Plate breakdown */
+    .plate-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: .4rem; flex-wrap: wrap; margin-top: 1rem;
+    }
+    .plate-chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 3rem; height: 3rem; border-radius: 50%;
+      font-size: .85rem; font-weight: 800; flex-shrink: 0;
+    }
+    .plate-bar {
+      font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+      color: var(--muted); background: var(--navy3);
+      padding: .3em .7em; border-radius: 6px; margin-right: .2rem;
+    }
+    .plate-per-side {
+      font-size: .85rem; font-weight: 700; color: var(--muted);
+      margin-left: .4rem; white-space: nowrap;
+    }
+
     .alert-warning { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.3); color: #fcd34d; }
   </style>
 </head>
@@ -233,6 +253,52 @@
       return null;
     }
 
+    // ── Plate calculator ─────────────────────────────────────────────────────
+
+    // Plate colors for visual display
+    const PLATE_COLORS = {
+      45:  { bg: "#1d4ed8", text: "#fff" },
+      35:  { bg: "#15803d", text: "#fff" },
+      25:  { bg: "#b45309", text: "#fff" },
+      10:  { bg: "#6b7280", text: "#fff" },
+      5:   { bg: "#374151", text: "#e5e7eb" },
+      2.5: { bg: "#1e293b", text: "#94a3b8" },
+    };
+
+    function calcPlates(totalLbs) {
+      const BAR = 45;
+      const PLATES = [45, 35, 25, 10, 5, 2.5];
+      const perSide = Math.round(((totalLbs - BAR) / 2) * 10) / 10;
+      if (perSide < 0) return null;
+      let remaining = perSide;
+      const breakdown = [];
+      for (const p of PLATES) {
+        const count = Math.floor(Math.round(remaining / p * 10) / 10);
+        if (count > 0) {
+          breakdown.push({ plate: p, count });
+          remaining = Math.round((remaining - count * p) * 10) / 10;
+        }
+      }
+      return { perSide, breakdown, remainder: remaining };
+    }
+
+    function renderPlates(totalLbs) {
+      const result = calcPlates(totalLbs);
+      if (!result || result.breakdown.length === 0) return "";
+      const chips = result.breakdown.flatMap(({ plate, count }) =>
+        Array(count).fill(plate)
+      ).map(p => {
+        const c = PLATE_COLORS[p] || { bg: "#334155", text: "#fff" };
+        return `<span class="plate-chip" style="background:${c.bg};color:${c.text};">${p}</span>`;
+      }).join("");
+      return `
+        <div class="plate-row">
+          <span class="plate-bar">BAR</span>
+          ${chips}
+          <span class="plate-per-side">${result.perSide} / side</span>
+        </div>`;
+    }
+
     function sortedAthletes(athletes, ev) {
       const round = getCurrentRound(athletes, ev);
       const list = [...athletes];
@@ -304,6 +370,7 @@
           <div class="lifting-attempt mt-2">
             ${lifterNext ? `Attempt ${lifterNext.num} of 3 &nbsp;·&nbsp; ${evLabel}` : evLabel + " complete"}
           </div>
+          ${lifterNext && lifterNext.weight > 0 ? renderPlates(lifterNext.weight) : ""}
         </div>
       `;
       body.appendChild(liftCard);
