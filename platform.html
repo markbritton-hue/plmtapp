@@ -173,6 +173,8 @@
     let unsubscribe = null;
     let pendingFocusField = null; // { aid, field } to auto-focus next attempt input after re-render
     let pendingAutoFill = null;   // { aid, field, value } — fill weight locally after fail, save on tab/Enter
+    let stableOrder = [];         // athlete IDs in current display order — only updated when results change
+    let prevResultsKey = "";      // fingerprint of results+isDone; reorder only when this changes
 
     async function init() {
       const meet = await getActiveMeet();
@@ -192,6 +194,7 @@
         const btn = e.target.closest("[data-event]");
         if (!btn) return;
         currentEvent = btn.dataset.event;
+        stableOrder = []; prevResultsKey = "";
         document.querySelectorAll("#eventTabs .platform-tab").forEach(b =>
           b.classList.toggle("active", b === btn));
         if (lastSnap) renderAthletes(lastSnap);
@@ -212,6 +215,7 @@
 
     function selectPlatform(p) {
       currentPlatform = p;
+      stableOrder = []; prevResultsKey = "";
       document.querySelectorAll(".platform-tab").forEach((btn, i) => {
         btn.classList.toggle("active", i + 1 === p);
       });
@@ -246,8 +250,6 @@
 
       const athletes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-      // Current round = the attempt number where at least one athlete is still pending.
-      // Once everyone finishes that attempt, round advances and we naturally sort by next weights.
       function getCurrentRound(list, ev) {
         let min = 3;
         for (const a of list) {
@@ -263,8 +265,6 @@
 
       const round = getCurrentRound(athletes, currentEvent);
 
-      // An athlete counts as "done" for this round only when they have a result
-      // AND their next attempt weight is entered (or it's attempt 3 — no next needed).
       function isDone(a) {
         const result = a[`${currentEvent}${round}Result`] ?? "";
         if (result === "") return false;
@@ -272,24 +272,38 @@
         return (a[`${currentEvent}${round + 1}`] || 0) > 0;
       }
 
-      // Once any athlete has completed their lift this round, the round is "in progress".
-      // Freeze remaining athletes in their established order so editing weights mid-round
-      // doesn't cause reordering.
-      const roundInProgress = athletes.some(a => (a[`${currentEvent}${round}Result`] ?? "") !== "");
+      // Fingerprint: result fields + isDone status per athlete.
+      // Reorder ONLY when this changes — weight-only edits keep the existing order.
+      const resultsKey = athletes.map(a =>
+        `${a.id}:${["squat","bench","dead"].flatMap(ev =>
+          [1,2,3].map(n => a[`${ev}${n}Result`] ?? "")
+        ).join("")}:${isDone(a) ? 1 : 0}`
+      ).join("|");
 
-      athletes.sort((a, b) => {
-        const aDone = isDone(a);
-        const bDone = isDone(b);
-        if (aDone !== bDone) return aDone ? 1 : -1;
-        if (!aDone && !roundInProgress) {
-          // Round hasn't started yet — sort by declared weight for this round
-          const wa = a[`${currentEvent}${round}`] || 0;
-          const wb = b[`${currentEvent}${round}`] || 0;
-          if (wa !== wb) return wa - wb;
-        }
-        // Mid-round or same weight: stable order based on opening attempt weight
-        return (a[`${currentEvent}1`] || 0) - (b[`${currentEvent}1`] || 0);
-      });
+      if (resultsKey !== prevResultsKey || stableOrder.length === 0) {
+        const roundInProgress = athletes.some(a => (a[`${currentEvent}${round}Result`] ?? "") !== "");
+        athletes.sort((a, b) => {
+          const aDone = isDone(a), bDone = isDone(b);
+          if (aDone !== bDone) return aDone ? 1 : -1;
+          if (!aDone && !roundInProgress) {
+            const wa = a[`${currentEvent}${round}`] || 0;
+            const wb = b[`${currentEvent}${round}`] || 0;
+            if (wa !== wb) return wa - wb;
+          }
+          return (a[`${currentEvent}1`] || 0) - (b[`${currentEvent}1`] || 0);
+        });
+        stableOrder = athletes.map(a => a.id);
+        prevResultsKey = resultsKey;
+      } else {
+        // Results unchanged — maintain current display order, just refresh data
+        athletes.sort((a, b) => {
+          const ai = stableOrder.indexOf(a.id);
+          const bi = stableOrder.indexOf(b.id);
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        });
+      }
 
       list.innerHTML = "";
       athletes.forEach((a, idx) => {
