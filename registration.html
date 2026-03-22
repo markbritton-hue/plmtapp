@@ -532,7 +532,10 @@
               <i class="fa-solid fa-trash"></i>
             </button>
           </td>`;
-        if (idx % 2 === 1) tr.querySelectorAll("td").forEach(td => td.style.background = "rgba(255,255,255,.05)");
+        if (idx % 2 === 1) tr.querySelectorAll("td").forEach(td => {
+          td.style.setProperty("background", "rgba(255,255,255,.06)", "important");
+          td.style.setProperty("box-shadow", "none", "important");
+        });
         tr.querySelector("[data-edit]").addEventListener("click", () => openEdit(a.id, a));
         tr.querySelector("[data-delete]").addEventListener("click", () => {
           pendingDeleteId = a.id;
