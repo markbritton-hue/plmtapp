@@ -273,7 +273,8 @@
           const wb = b[`${currentEvent}${round}`] || 0;
           if (wa !== wb) return wa - wb;
         }
-        return (a.liftOrder || 0) - (b.liftOrder || 0);
+        // Tiebreaker: opening attempt weight for this event (establishes known start order)
+        return (a[`${currentEvent}1`] || 0) - (b[`${currentEvent}1`] || 0);
       });
 
       list.innerHTML = "";
