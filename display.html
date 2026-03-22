@@ -273,12 +273,12 @@
 
     // Plate visual dimensions (height × width in SVG units)
     const PLATE_DIMS = {
-      45:  { h: 90, w: 24 },
-      35:  { h: 76, w: 20 },
-      25:  { h: 62, w: 16 },
-      10:  { h: 46, w: 13 },
-      5:   { h: 36, w: 11 },
-      2.5: { h: 28, w: 9  },
+      45:  { h: 90, w: 16 },
+      35:  { h: 76, w: 14 },
+      25:  { h: 62, w: 12 },
+      10:  { h: 46, w: 9  },
+      5:   { h: 36, w: 7  },
+      2.5: { h: 28, w: 6  },
     };
 
     function renderPlates(totalLbs) {
@@ -326,7 +326,7 @@
       for (const p of plates) {
         const { w, h } = scaledDim(p);
         const col = PLATE_COLORS[p] || { bg: "#6b7280", border: "#9ca3af", text: "#fff" };
-        const fs  = Math.round(w * 0.52);
+        const fs  = Math.round(w * 0.72);
         const mid = x + w / 2;
         els.push(`<rect x="${x}" y="${cy - h/2}" width="${w}" height="${h}" rx="5" fill="${col.bg}" stroke="${col.border}" stroke-width="3"/>`);
         els.push(`<text x="${mid}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
