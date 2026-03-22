@@ -261,9 +261,6 @@
         return Math.min(min + 1, 3);
       }
 
-      // Within a round: sort by that round's declared weight (ascending).
-      // Athletes who've already lifted this round go after those who haven't.
-      // When everyone finishes the round, getCurrentRound advances and reorder kicks in.
       const round = getCurrentRound(athletes, currentEvent);
 
       // An athlete counts as "done" for this round only when they have a result
@@ -275,16 +272,22 @@
         return (a[`${currentEvent}${round + 1}`] || 0) > 0;
       }
 
+      // Once any athlete has completed their lift this round, the round is "in progress".
+      // Freeze remaining athletes in their established order so editing weights mid-round
+      // doesn't cause reordering.
+      const roundInProgress = athletes.some(a => (a[`${currentEvent}${round}Result`] ?? "") !== "");
+
       athletes.sort((a, b) => {
         const aDone = isDone(a);
         const bDone = isDone(b);
         if (aDone !== bDone) return aDone ? 1 : -1;
-        if (!aDone) {
+        if (!aDone && !roundInProgress) {
+          // Round hasn't started yet — sort by declared weight for this round
           const wa = a[`${currentEvent}${round}`] || 0;
           const wb = b[`${currentEvent}${round}`] || 0;
           if (wa !== wb) return wa - wb;
         }
-        // Tiebreaker: opening attempt weight for this event (establishes known start order)
+        // Mid-round or same weight: stable order based on opening attempt weight
         return (a[`${currentEvent}1`] || 0) - (b[`${currentEvent}1`] || 0);
       });
 
