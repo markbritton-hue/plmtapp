@@ -287,62 +287,55 @@
       const plates = result.breakdown.flatMap(({ plate, count }) => Array(count).fill(plate));
 
       // SVG layout — one side only, huge
-      const BAR_H     = 36;
-      const BAR_STUB  = 80;   // bar stub showing from the left edge
-      const COLLAR_W  = 32;
-      const COLLAR_H  = 90;
-      const END_W     = 44;
-      const END_H     = BAR_H + 14;
-      const PAD       = 16;
+      const SCALE     = 2.4;
+      const BAR_H     = 34;
+      const BAR_STUB  = 80;
+      const COLLAR_W  = 30;
+      const COLLAR_H  = 88;
+      const END_W     = 42;
+      const END_H     = BAR_H + 12;
+      const PAD       = 20;
+
+      // Scaled plate dimensions
+      const scaledDim = p => ({
+        w: (PLATE_DIMS[p]?.w || 13) * SCALE,
+        h: (PLATE_DIMS[p]?.h || 46) * SCALE,
+      });
 
       const maxH = plates.length
-        ? Math.max(COLLAR_H, ...plates.map(p => (PLATE_DIMS[p] || {h:200}).h))
+        ? Math.max(COLLAR_H, ...plates.map(p => scaledDim(p).h))
         : COLLAR_H;
       const svgH  = maxH + PAD * 2;
       const cy    = svgH / 2;
 
-      const platesW = plates.reduce((s, p) => s + (PLATE_DIMS[p]?.w || 30) * 2.5, 0);
-      const svgW  = BAR_STUB + COLLAR_W + platesW + END_W + PAD * 2;
+      const platesW = plates.reduce((s, p) => s + scaledDim(p).w, 0);
+      const svgW  = PAD + BAR_STUB + COLLAR_W + platesW + END_W + PAD;
 
       const els = [];
 
-      // Bar stub (left edge → collar)
-      els.push(`<rect x="0" y="${cy - BAR_H/2}" width="${BAR_STUB + COLLAR_W + PAD}" height="${BAR_H}" rx="6" fill="#4b5563"/>`);
+      // 1. Full bar drawn first (behind everything)
+      els.push(`<rect x="0" y="${cy - BAR_H/2}" width="${svgW}" height="${BAR_H}" rx="6" fill="#4b5563"/>`);
 
-      // Helper: collar
-      const collar = (x) =>
-        `<rect x="${x}" y="${cy - COLLAR_H/2}" width="${COLLAR_W}" height="${COLLAR_H}" rx="5" fill="#6b7280" stroke="#9ca3af" stroke-width="2.5"/>`;
+      // 2. Collar
+      const collarX = PAD + BAR_STUB;
+      els.push(`<rect x="${collarX}" y="${cy - COLLAR_H/2}" width="${COLLAR_W}" height="${COLLAR_H}" rx="5" fill="#6b7280" stroke="#9ca3af" stroke-width="2.5"/>`);
 
-      // Helper: plate + label
-      const plateSVG = (x, p) => {
-        const baseW = PLATE_DIMS[p]?.w || 13;
-        const w   = baseW * 2.5;
-        const h   = (PLATE_DIMS[p]?.h || 46) * 2.2;
-        const col = PLATE_COLORS[p] || { bg: "#6b7280", border: "#9ca3af", text: "#fff" };
-        const fs  = Math.round(w * 0.55);
-        const mid = x + w / 2;
-        return [
-          `<rect x="${x}" y="${cy - h/2}" width="${w}" height="${h}" rx="5" fill="${col.bg}" stroke="${col.border}" stroke-width="3"/>`,
-          `<text x="${mid}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
-             fill="${col.text}" font-size="${fs}" font-weight="900" font-family="Segoe UI,sans-serif"
-             transform="rotate(-90 ${mid} ${cy})">${p}</text>`,
-        ].join("");
-      };
-
-      // End cap
-      const endCap = (x) =>
-        `<rect x="${x}" y="${cy - END_H/2}" width="${END_W}" height="${END_H}" rx="6" fill="#374151" stroke="#4b5563" stroke-width="2"/>`;
-
-      // Draw: collar → plates → end cap
-      let x = PAD + BAR_STUB;
-      els.push(collar(x)); x += COLLAR_W;
+      // 3. Plates (drawn after bar so they sit on top)
+      let x = collarX + COLLAR_W;
       for (const p of plates) {
-        els.push(plateSVG(x, p));
-        x += (PLATE_DIMS[p]?.w || 13) * 2.5;
+        const { w, h } = scaledDim(p);
+        const col = PLATE_COLORS[p] || { bg: "#6b7280", border: "#9ca3af", text: "#fff" };
+        const fs  = Math.round(w * 0.52);
+        const mid = x + w / 2;
+        els.push(`<rect x="${x}" y="${cy - h/2}" width="${w}" height="${h}" rx="5" fill="${col.bg}" stroke="${col.border}" stroke-width="3"/>`);
+        els.push(`<text x="${mid}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
+           fill="${col.text}" font-size="${fs}" font-weight="900" font-family="Segoe UI,sans-serif"
+           transform="rotate(-90 ${mid} ${cy})">${p}</text>`);
+        x += w;
       }
-      // Bar sleeve continues to end cap
-      els.push(`<rect x="${PAD + BAR_STUB + COLLAR_W}" y="${cy - BAR_H/2}" width="${x - (PAD + BAR_STUB + COLLAR_W) + END_W}" height="${BAR_H}" rx="4" fill="#374151"/>`);
-      els.push(endCap(x));
+
+      // 4. End cap (on top)
+      els.push(`<rect x="${x}" y="${cy - END_H/2}" width="${END_W}" height="${END_H}" rx="6" fill="#374151" stroke="#6b7280" stroke-width="2"/>`);
 
       const sub = plates.length === 0
         ? "Just the bar — 45 lbs"
