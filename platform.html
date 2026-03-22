@@ -49,8 +49,9 @@
     .event-col { min-width: 0; }
     .event-label {
       font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-      color: var(--muted); margin-bottom: .4rem;
+      color: var(--muted); margin-bottom: .4rem; display: flex; align-items: center; gap: .4rem;
     }
+    .event-best { color: #4ade80; font-size: .75rem; font-weight: 700; }
     .attempts-group { display: flex; flex-direction: column; gap: .35rem; }
 
     /* Attempt chip */
@@ -157,7 +158,7 @@
     import {
       collection, onSnapshot, query, where, orderBy, updateDoc, doc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getActiveMeetId, getActiveMeet, calcTotal } from "./meet-utils.js";
+    import { getActiveMeetId, getActiveMeet, calcTotal, bestSquat, bestBench, bestDead } from "./meet-utils.js";
 
     const meetId = getActiveMeetId();
     if (!meetId) {
@@ -345,15 +346,15 @@
         <div class="athlete-body">
           <div class="events-grid">
             <div class="event-col">
-              <div class="event-label">Squat</div>
+              <div class="event-label">Squat ${bestSquat(a) > 0 ? `<span class="event-best">${bestSquat(a)}</span>` : ""}</div>
               ${buildAttempts(id, a, "squat", position === "lifting")}
             </div>
             <div class="event-col">
-              <div class="event-label">Bench</div>
+              <div class="event-label">Bench ${bestBench(a) > 0 ? `<span class="event-best">${bestBench(a)}</span>` : ""}</div>
               ${buildAttempts(id, a, "bench", position === "lifting")}
             </div>
             <div class="event-col">
-              <div class="event-label">Dead</div>
+              <div class="event-label">Dead ${bestDead(a) > 0 ? `<span class="event-best">${bestDead(a)}</span>` : ""}</div>
               ${buildAttempts(id, a, "dead", position === "lifting")}
             </div>
           </div>
