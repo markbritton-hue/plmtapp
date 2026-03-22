@@ -170,7 +170,7 @@
     let currentEvent = "squat";
     let lastSnap = null;
     let unsubscribe = null;
-    let pendingFocusAid = null;   // athlete ID to auto-focus next attempt input after re-render
+    let pendingFocusField = null; // { aid, field } to auto-focus next attempt input after re-render
     let pendingAutoFill = null;   // { aid, field, value } — fill weight locally after fail, save on tab/Enter
 
     async function init() {
@@ -293,14 +293,15 @@
         list.appendChild(buildAthleteCard(a.id, a, position));
       });
 
-      // After re-render, focus next attempt weight input for the athlete who just lifted good
-      if (pendingFocusAid) {
-        const input = list.querySelector(`input.weight-input[data-aid="${pendingFocusAid}"]`);
+      // After re-render, focus the specific next attempt weight input for a good lift
+      if (pendingFocusField) {
+        const { aid, field } = pendingFocusField;
+        const input = list.querySelector(`input.weight-input[data-aid="${aid}"][data-field="${field}"]`);
         if (input) {
           input.focus();
           input.select();
         }
-        pendingFocusAid = null;
+        pendingFocusField = null;
       }
 
       // After re-render, populate and focus the auto-filled weight for a failed lift.
@@ -440,7 +441,8 @@
       // On a good lift, focus the next attempt weight input after re-render
       if (val === "g") {
         const match = field.match(/^(\w+?)(\d)Result$/);
-        if (match && parseInt(match[2]) < 3) pendingFocusAid = aid;
+        if (match && parseInt(match[2]) < 3)
+          pendingFocusField = { aid, field: `${match[1]}${parseInt(match[2]) + 1}` };
       }
 
       // On a failed lift, locally fill the next attempt input with the same weight and focus it.
