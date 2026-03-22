@@ -378,6 +378,14 @@
       const { aid, field, val } = btn.dataset;
       const update = { [field]: val };
 
+      // When clearing a 2nd or 3rd attempt, also wipe its weight
+      if (val === "") {
+        const match = field.match(/^(\w+?)(\d)Result$/);
+        if (match && parseInt(match[2]) > 1) {
+          update[`${match[1]}${match[2]}`] = 0;
+        }
+      }
+
       // On a good lift, focus the next attempt weight input after re-render
       if (val === "g") {
         const match = field.match(/^(\w+?)(\d)Result$/);
