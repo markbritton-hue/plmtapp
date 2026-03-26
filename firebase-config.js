@@ -4,12 +4,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAAajhyQlWJ1JaSQrXXoemBEWJ6UFR7W4E",
-  authDomain: "plmtapp.firebaseapp.com",
-  projectId: "plmtapp",
-  storageBucket: "plmtapp.firebasestorage.app",
-  messagingSenderId: "832823759757",
-  appId: "1:832823759757:web:ad58b6257357670a8063c4"
+  apiKey: "AIzaSyB5FKrs0rys3ODV2U36YFjJWUu_BgFuDZk",
+  authDomain: "powerlift-live.firebaseapp.com",
+  projectId: "powerlift-live",
+  storageBucket: "powerlift-live.firebasestorage.app",
+  messagingSenderId: "627435482576",
+  appId: "1:627435482576:web:77e721dedd55cb04a35dd5"
 };
 
 const app = initializeApp(firebaseConfig);
